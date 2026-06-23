@@ -1,0 +1,66 @@
+@startuml Diagrama de Clases - Strategy Pattern
+skinparam classAttributeIconSize 0
+
+package "model" {
+    class Docente {
+        + ID: string
+        + Nombre: string
+        + Departamento: string
+        + Cargo: string
+    }
+    class Competencia {
+        + ID: string
+        + Nombre: string
+        + Tipo: string
+    }
+    class Evaluacion {
+        + ID: string
+        + DocenteID: string
+        + CompetenciaID: string
+        + PuntajeBase: float64
+        + PuntajeFinal: float64
+    }
+}
+
+package "strategy" {
+    class EvalContext {
+        + Docente: Docente
+        + Competencia: Competencia
+        + Evaluacion: Evaluacion
+        + Antiguedad: int
+        + ReglasAplicadas: map[string]bool
+    }
+
+    interface EstrategiaPonderacion {
+        + Calcular(ctx: *EvalContext, puntajeActual: float64): float64
+        + Aplica(ctx: *EvalContext): bool
+        + Nombre(): string
+        + Prioridad(): int
+    }
+
+    class R1CienciasInvestigacion implements EstrategiaPonderacion
+    class R2ReduccionDirectoresGestion implements EstrategiaPonderacion
+    class R3Antiguedad implements EstrategiaPonderacion
+    class R4CoordinadoresAcademica implements EstrategiaPonderacion
+    class R5AdministracionGestion implements EstrategiaPonderacion
+}
+
+package "engine" {
+    class CalculadorEngine {
+        + Reglas: []EstrategiaPonderacion
+        + CalcularPuntajeConReglas(eval: Evaluacion, doc: Docente, comp: Competencia, ant: int): (float64, []string)
+    }
+    class ReporteEngine {
+        + Calculador: *CalculadorEngine
+        + GenerarReporteJustificado(eval: Evaluacion, doc: Docente, comp: Competencia, ant: int): string
+    }
+}
+
+EvalContext "1" *-- "1" model.Docente : usa copia
+EvalContext "1" *-- "1" model.Competencia : usa copia
+EvalContext "1" *-- "1" model.Evaluacion : usa copia
+
+CalculadorEngine "1" o-- "*" EstrategiaPonderacion : agrega
+CalculadorEngine ..> EvalContext : crea e inyecta
+ReporteEngine "1" *-- "1" CalculadorEngine : compone
+@enduml

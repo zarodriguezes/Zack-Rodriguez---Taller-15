@@ -1,0 +1,36 @@
+@startuml Diagrama de Secuencia - Flujo Dinámico
+actor Main
+participant "engine.CalculadorEngine" as Engine
+participant "strategy.EvalContext" as Ctx
+participant "strategy.EstrategiaPonderacion" as Strategy
+
+Main -> Engine : CalcularPuntajeConReglas(eval, doc, comp, ant)
+activate Engine
+
+note over Engine : Ordena reglas por\nprioridad (descendente)
+
+Engine -> Ctx : Instanciar nuevo contexto
+activate Ctx
+Ctx --> Engine : ctx
+deactivate Ctx
+
+loop para cada regla en reglasOrdenadas
+    Engine -> Strategy : Aplica(ctx)
+    activate Strategy
+    Strategy --> Engine : true / false
+    deactivate Strategy
+
+    alt si aplica == true
+        Engine -> Strategy : Calcular(ctx, puntajeActual)
+        activate Strategy
+        Strategy --> Engine : nuevoPuntaje
+        deactivate Strategy
+        
+        Engine -> Engine : Actualizar puntaje acumulado
+        Engine -> Ctx : Registrar regla en ctx.ReglasAplicadas
+    end
+end
+
+Engine --> Main : puntajeFinal, listaDeReglasAplicadas
+deactivate Engine
+@enduml
